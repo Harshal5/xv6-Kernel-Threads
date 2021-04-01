@@ -532,3 +532,29 @@ procdump(void)
     cprintf("\n");
   }
 }
+
+int clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack){
+  int pid;
+  struct proc *newProcess;
+
+  newProcess = allocproc();
+  if (newProcess == 0){
+    return -1;
+  }
+
+  struct proc *currentProc = myproc();
+
+  newProcess->pgdir = currentProc->pgdir;
+  newProcess->sz = currentProc->sz;
+  newProcess->parent = currentProc;
+  if (newProcess->tid == 0){
+    newProcess->tgid = currentProc->pid;
+  }
+  else{
+    newProcess->tgid = currentProc->tgid;
+  }
+  newProcess->tid++;
+  
+
+  return pid;
+}
