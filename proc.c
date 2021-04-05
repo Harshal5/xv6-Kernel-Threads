@@ -533,7 +533,8 @@ procdump(void)
   }
 }
 
-int clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack){
+int 
+clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack){
   int pid;
   struct proc *newProcess;
   struct proc *currentProc = myproc();
@@ -560,7 +561,7 @@ int clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack){
     +                +
     +   Argument 1   +
     +                +
-    +   0xffffffff   +   <-- Top of the stack
+    +   0xffffffff   +   <-- Top of the stack   <-- <-- %ebp, %esp
     +                +
     +  ------------  +
     +                +
@@ -568,7 +569,7 @@ int clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack){
     +     EMPTY      +
     +                +
     +                +
-    +----------------+   <-- stack  <-- %ebp, %esp(intially)
+    +----------------+   <-- stack  
   *
   */
 
@@ -588,6 +589,24 @@ int clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack){
   newProcess->tf->ebp = newProcess->tf->esp;    // %ebp will always be where %esp was at the beginning of the function 
   newProcess->tf->eax = 0;    // So that clone returns 0 in the thread
   newProcess->tf->eip = (uint) fcn;   // execution will hence start from this function
+
+  newProcess->threadstack = stack;    // saving the address of the stack
+  
+  for(int i = 0; i < NOFILE; i++)   // duplicating all the file table values from the parent process.
+    if(currentProc->ofile[i])
+      newProcess->ofile[i] = filedup(currentProc->ofile[i]);
+  
+  newProcess->cwd = idup(currentProc->cwd);   // duplicate the current working directory inode
+
+  safestrcpy(newProcess->name, currentProc->name, sizeof(currentProc->name));   // copying name
+
+  pid = newProcess->pid;
+
+  acquire(&ptable.lock);
+
+  newProcess->state = RUNNABLE;   // thread state made RUNNABLE
+
+  release(&ptable.lock);
 
   return pid;
 }
