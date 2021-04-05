@@ -536,25 +536,58 @@ procdump(void)
 int clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack){
   int pid;
   struct proc *newProcess;
+  struct proc *currentProc = myproc();
+  void *arg1Address, *arg2Address, *returnPCAddress;
+ 
+  //  add size checking  
+  //  also for page-alignment 
 
   newProcess = allocproc();
   if (newProcess == 0){
     return -1;
   }
 
-  struct proc *currentProc = myproc();
-
   newProcess->pgdir = currentProc->pgdir;
   newProcess->sz = currentProc->sz;
   newProcess->parent = currentProc;
-  if (newProcess->tid == 0){
-    newProcess->tgid = currentProc->pid;
-  }
-  else{
-    newProcess->tgid = currentProc->tgid;
-  }
-  newProcess->tid++;
+  newProcess->tf = currentProc->tf;
+
+  /*  Now, we want the Stack to look like:
+  * 
+    +----------------+   <-- stack + PGSIZE
+    +                +  
+    +   Argument 2   +   
+    +                +
+    +   Argument 1   +
+    +                +
+    +   0xffffffff   +   <-- Top of the stack
+    +                +
+    +  ------------  +
+    +                +
+    +                +
+    +     EMPTY      +
+    +                +
+    +                +
+    +----------------+   <-- stack  <-- %ebp, %esp(intially)
+  *
+  */
+
+  returnPCAddress = stack + PGSIZE - (3 * sizeof(void *));
+  *(uint*) returnPCAddress = 0xffffffff;    // so that is returns to nowhere, hence i guess it becomes zombie after execution
+
+  arg1Address = stack + PGSIZE - (2 * sizeof(void *));
+  *(uint*) arg1Address = (uint) arg1;
   
+  arg2Address = stack + PGSIZE - (sizeof(void *));
+  *(uint*) arg2Address = (uint) arg2;
+
+  // This gives the sense of calling conventions
+  // i.e. arg2 is push first, then arg1, and then the "fake" return PC
+
+  newProcess->tf->esp = stack + PGSIZE - (3 * sizeof(void *));    // esp has the address of the top of the stack   
+  newProcess->tf->ebp = newProcess->tf->esp;    // %ebp will always be where %esp was at the beginning of the function 
+  newProcess->tf->eax = 0;    // So that clone returns 0 in the thread
+  newProcess->tf->eip = (uint) fcn;   // execution will hence start from this function
 
   return pid;
 }
