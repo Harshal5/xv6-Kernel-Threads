@@ -583,6 +583,8 @@ clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack)
   arg2Address = stack + PGSIZE - (sizeof(void *));
   *(uint*) arg2Address = (uint) arg2;
 
+  cprintf("From proc.c %p\n", (char*)arg2);
+
   // This gives the sense of calling conventions
   // i.e. arg2 is pushed first, then arg1, and then the "fake" return PC
 

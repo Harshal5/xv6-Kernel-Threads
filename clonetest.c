@@ -8,8 +8,8 @@ void func(void *arg1, void *arg2)
 {
   int pid = getpid();
   printf(1, "Child: pid is %d\n", pid);
-  printf(1, "Child: arg1 is %d\n", *(int*) arg1);
-  printf(1, "Child: arg2 is %d\n", *(int*) arg2);
+  printf(1, "Child: arg1 is %p\n", *(int*) arg1);
+  printf(1, "Child: arg2 is %p\n", (char*) arg2);
   exit();
 }
 
@@ -17,9 +17,10 @@ int main(int argc, char *argv[])
 {
   int parent_pid, child_pid;
   char *stack_bottom;
-  int arg1 = 0, arg2 = 1;
+  int arg1 = 0;
+  char *arg2 = "Harshal";
   printf(1, "Parent : arg1 is %d\n", arg1);
-  printf(1, "Parent : arg2 is %d\n", arg2);
+  printf(1, "Parent : arg2 is %s\n", arg2);
 
   parent_pid = getpid();
   printf(1, "Parent: pid is %d\n", parent_pid);
