@@ -534,7 +534,8 @@ procdump(void)
 }
 
 int 
-clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack){
+clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack)
+{
   int pid;
   struct proc *newProcess;
   struct proc *currentProc = myproc();
@@ -551,25 +552,25 @@ clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack){
   newProcess->pgdir = currentProc->pgdir;
   newProcess->sz = currentProc->sz;
   newProcess->parent = currentProc;
-  newProcess->tf = currentProc->tf;
+  *newProcess->tf = *currentProc->tf;
 
   /*  Now, we want the Stack to look like:
   * 
-    +----------------+   <-- stack + PGSIZE
+    +----------------+    <-- stack + PGSIZE
     +                +  
     +   Argument 2   +   
     +                +
     +   Argument 1   +
     +                +
-    +   0xffffffff   +   <-- Top of the stack   <-- <-- %ebp, %esp
+    +   0xffffffff   +   
+    +  ------------  +    <-- Top of the stack   <-- <-- %ebp, %esp
     +                +
-    +  ------------  +
     +                +
     +                +
     +     EMPTY      +
     +                +
     +                +
-    +----------------+   <-- stack  
+    +----------------+    <-- stack  
   *
   */
 
@@ -583,9 +584,9 @@ clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack){
   *(uint*) arg2Address = (uint) arg2;
 
   // This gives the sense of calling conventions
-  // i.e. arg2 is push first, then arg1, and then the "fake" return PC
+  // i.e. arg2 is pushed first, then arg1, and then the "fake" return PC
 
-  newProcess->tf->esp = stack + PGSIZE - (3 * sizeof(void *));    // esp has the address of the top of the stack   
+  newProcess->tf->esp = (uint)(stack + PGSIZE - (3 * sizeof(void *)));    // esp has the address of the top of the stack   
   newProcess->tf->ebp = newProcess->tf->esp;    // %ebp will always be where %esp was at the beginning of the function 
   newProcess->tf->eax = 0;    // So that clone returns 0 in the thread
   newProcess->tf->eip = (uint) fcn;   // execution will hence start from this function
