@@ -10,7 +10,7 @@
 .code16                       # Assemble for 16-bit mode
 .globl start
 start:
-  cli                         # BIOS enabled interrupts; disable
+  cli                         # BIOS enabled interrupts; disable    # boot sector starts at this point
 
   # Zero data segment registers DS, ES, and SS.
   xorw    %ax,%ax             # Set %ax to zero
@@ -39,21 +39,21 @@ seta20.2:
   # Switch from real to protected mode.  Use a bootstrap GDT that makes
   # virtual addresses map directly to physical addresses so that the
   # effective memory map doesn't change during the transition.
-  lgdt    gdtdesc
+  lgdt    gdtdesc         # load global decriptor table     # gdtdesc (see at the end)
   movl    %cr0, %eax
-  orl     $CR0_PE, %eax
+  orl     $CR0_PE, %eax   # move to protected mode
   movl    %eax, %cr0
 
 //PAGEBREAK!
   # Complete the transition to 32-bit protected mode by using a long jmp
   # to reload %cs and %eip.  The segment descriptors are set up with no
   # translation, so that the mapping is still the identity mapping.
-  ljmp    $(SEG_KCODE<<3), $start32
+  ljmp    $(SEG_KCODE<<3), $start32   # loads CS = $(SEG_KCODE(=1)<<3) and %eip = $start32    # load 1st desc. in CS 
 
 .code32  # Tell assembler to generate 32-bit code now.
 start32:
   # Set up the protected-mode data segment registers
-  movw    $(SEG_KDATA<<3), %ax    # Our data segment selector
+  movw    $(SEG_KDATA<<3), %ax    # Our data segment selector   # loading 2nd desc.
   movw    %ax, %ds                # -> DS: Data Segment
   movw    %ax, %es                # -> ES: Extra Segment
   movw    %ax, %ss                # -> SS: Stack Segment
@@ -62,8 +62,8 @@ start32:
   movw    %ax, %gs                # -> GS
 
   # Set up the stack pointer and call into C.
-  movl    $start, %esp
-  call    bootmain
+  movl    $start, %esp    # $start = 0x7c00   # initialising my stack
+  call    bootmain        # C function called (in bootmain.c)
 
   # If bootmain returns (it shouldn't), trigger a Bochs
   # breakpoint if running under Bochs, then loop.
@@ -77,10 +77,10 @@ spin:
 
 # Bootstrap GDT
 .p2align 2                                # force 4 byte alignment
-gdt:
-  SEG_NULLASM                             # null seg
-  SEG_ASM(STA_X|STA_R, 0x0, 0xffffffff)   # code seg
-  SEG_ASM(STA_W, 0x0, 0xffffffff)         # data seg
+gdt:                                      # gdt of size 3
+  SEG_NULLASM                             # null seg    # says 0th descriptor is NULL
+  SEG_ASM(STA_X|STA_R, 0x0, 0xffffffff)   # code seg    # says 1st descriptr is for the code  # STA_X == execute priviledges    # STA_R == read priviledges   #0x0 == base    #0xffffffff == limit
+  SEG_ASM(STA_W, 0x0, 0xffffffff)         # data seg    # all the other descriptors   # STA_W == writable priviledges
 
 gdtdesc:
   .word   (gdtdesc - gdt - 1)             # sizeof(gdt) - 1

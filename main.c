@@ -100,12 +100,16 @@ startothers(void)
 // PTE_PS in a page directory entry enables 4Mbyte pages.
 
 __attribute__((__aligned__(PGSIZE)))
-pde_t entrypgdir[NPDENTRIES] = {
+pde_t entrypgdir[NPDENTRIES] = {        // global variable  // NPDENTRIES == 2^10 enteries == 1024
   // Map VA's [0, 4MB) to PA's [0, 4MB)
   [0] = (0) | PTE_P | PTE_W | PTE_PS,
   // Map VA's [KERNBASE, KERNBASE+4MB) to PA's [0, 4MB)
   [KERNBASE>>PDXSHIFT] = (0) | PTE_P | PTE_W | PTE_PS,
 };
+
+/**
+ *  (0 - 4MB) and (2GB - 2GB+4MB) of virtual address is mapped to (0 - 4MB) of physical address space * 
+*/
 
 //PAGEBREAK!
 // Blank page.

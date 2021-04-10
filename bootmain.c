@@ -15,37 +15,39 @@
 void readseg(uchar*, uint, uint);
 
 void
-bootmain(void)
+bootmain(void)      // load the kernel from the disk into memory and jump to the first instruction 
 {
   struct elfhdr *elf;   // because ./kernel file is a ELF and it has to be read, so we a need a pointer.
   struct proghdr *ph, *eph;
   void (*entry)(void);
   uchar* pa;
 
-  elf = (struct elfhdr*)0x10000;    // scratch space  // ELF pointing to 1 Mega space.
+  elf = (struct elfhdr*)0x10000;    // scratch space  // ELF pointing to 64KB memory address.
 
   // Read 1st page off disk
-  readseg((uchar*)elf, 4096, 0);    // (uchar *)elf is the target address, read from 0 to 4096 bytes.
+  readseg((uchar*)elf, 4096, 0);    // (uchar *)elf is the target address, read from 0 to 4096 bytes (ELF header).
 
   // Is this an ELF executable?
   if(elf->magic != ELF_MAGIC)
     return;  // let bootasm.S handle error
 
   // Load each program segment (ignores ph flags).
-  ph = (struct proghdr*)((uchar*)elf + elf->phoff);
+  ph = (struct proghdr*)((uchar*)elf + elf->phoff);   // ph == program header is obatined by adding the elf->phoff offset
   eph = ph + elf->phnum;
   // Number of program headers
   for(; ph < eph; ph++){
     // Iterate over each program header
-    pa = (uchar*)ph->paddr;
+    pa = (uchar*)ph->paddr;   
     // The physical address to load program
     /*
       read ph->filesz bytes into 'pa', from ph->off in kernel/disk  
     */
     readseg(pa, ph->filesz, ph->off);
     if(ph->memsz > ph->filesz)
-      stosb(pa + ph->filesz, 0, ph->memsz - ph->filesz);
+      stosb(pa + ph->filesz, 0, ph->memsz - ph->filesz);    // if in this condition stosb (store bytes) stores 0 in the rest of size
   }
+
+  // until here segments have been setup
 
   // Call the entry point from the ELF header.
   // Does not return!
@@ -55,7 +57,7 @@ bootmain(void)
     * See kernel.asm for kernel assembly code  
   */
   entry = (void(*)(void))(elf->entry);
-  entry();
+  entry();    // entry.S
 }
 
 void

@@ -47,9 +47,11 @@ entry:
   movl    %cr4, %eax
   orl     $(CR4_PSE), %eax
   movl    %eax, %cr4
+
   # Set page directory
-  movl    $(V2P_WO(entrypgdir)), %eax
-  movl    %eax, %cr3
+  movl    $(V2P_WO(entrypgdir)), %eax   # V2P = Virtual to physical (substracts 2GB from entrypgdir)   # entrypgdir(from main.c) == virtual address (above 2 GB) 
+  movl    %eax, %cr3          # loading the page dorectory into %cr3
+  
   # Turn on paging.
   movl    %cr0, %eax
   orl     $(CR0_PG|CR0_WP), %eax
