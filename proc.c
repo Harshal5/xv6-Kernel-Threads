@@ -121,9 +121,9 @@ void
 userinit(void)
 {
   struct proc *p;
-  extern char _binary_initcode_start[], _binary_initcode_size[];
+  extern char _binary_initcode_start[], _binary_initcode_size[];    // these extern variables are to be made avialable by linker // values to be filled by initcode.S
 
-  p = allocproc();
+  p = allocproc();    // allocates a struct proc
   
   initproc = p;
   if((p->pgdir = setupkvm()) == 0)
@@ -342,8 +342,11 @@ scheduler(void)
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
-
+    
+      // the below will push p->context, then address of c->scheduler, and then return address X on stack 
       swtch(&(c->scheduler), p->context);
+      // address, say X
+      // the control comes here, only from sched() !, not otherwise
       switchkvm();
 
       // Process is done running for now.

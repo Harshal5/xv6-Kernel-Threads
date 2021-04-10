@@ -91,8 +91,11 @@ CFLAGS += -fno-pie -nopie
 endif
 
 xv6.img: bootblock kernel
+#creates a file xv6.img with 10000 blocks of zeroes '0'	
 	dd if=/dev/zero of=xv6.img count=10000
+#bootblock will become the first block in xv6.img
 	dd if=bootblock of=xv6.img conv=notrunc
+# copy the file kernel and copy it into the file xv6.img but skip the first block as it has bootblock
 	dd if=kernel of=xv6.img seek=1 conv=notrunc
 
 xv6memfs.img: bootblock kernelmemfs

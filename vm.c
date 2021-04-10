@@ -58,7 +58,7 @@ walkpgdir(pde_t *pgdir, const void *va, int alloc)
 // physical addresses starting at pa. va and size might not
 // be page-aligned.
 static int
-mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
+mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)    //page directory, starting virtual address, size of the region, starting physical address, permissions
 {
   char *a, *last;
   pte_t *pte;
@@ -108,9 +108,9 @@ static struct kmap {
   uint phys_end;
   int perm;
 } kmap[] = {
- { (void*)KERNBASE, 0,             EXTMEM,    PTE_W}, // I/O space
- { (void*)KERNLINK, V2P(KERNLINK), V2P(data), 0},     // kern text+rodata
- { (void*)data,     V2P(data),     PHYSTOP,   PTE_W}, // kern data+memory
+ { (void*)KERNBASE, 0,             EXTMEM,    PTE_W}, // I/O space          // starting from the virtual address KERNBASE i.e. 2048 upto EXTMEM that is the range of 1 MB will be writable.
+ { (void*)KERNLINK, V2P(KERNLINK), V2P(data), 0},     // kern text+rodata   // starting from KERNLINK == 2098 upto the variable data 80108000 (from kernel.sym) is read-only.
+ { (void*)data,     V2P(data),     PHYSTOP,   PTE_W}, // kern data+memory   // from that to PHYSTOP == 224 MB create entries in the page table which are marked for writing.
  { (void*)DEVSPACE, DEVSPACE,      0,         PTE_W}, // more devices
 };
 

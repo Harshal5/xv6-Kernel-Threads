@@ -17,15 +17,15 @@ void readseg(uchar*, uint, uint);
 void
 bootmain(void)
 {
-  struct elfhdr *elf;
+  struct elfhdr *elf;   // because ./kernel file is a ELF and it has to be read, so we a need a pointer.
   struct proghdr *ph, *eph;
   void (*entry)(void);
   uchar* pa;
 
-  elf = (struct elfhdr*)0x10000;  // scratch space
+  elf = (struct elfhdr*)0x10000;    // scratch space  // ELF pointing to 1 Mega space.
 
   // Read 1st page off disk
-  readseg((uchar*)elf, 4096, 0);
+  readseg((uchar*)elf, 4096, 0);    // (uchar *)elf is the target address, read from 0 to 4096 bytes.
 
   // Is this an ELF executable?
   if(elf->magic != ELF_MAGIC)
@@ -34,8 +34,14 @@ bootmain(void)
   // Load each program segment (ignores ph flags).
   ph = (struct proghdr*)((uchar*)elf + elf->phoff);
   eph = ph + elf->phnum;
+  // Number of program headers
   for(; ph < eph; ph++){
+    // Iterate over each program header
     pa = (uchar*)ph->paddr;
+    // The physical address to load program
+    /*
+      read ph->filesz bytes into 'pa', from ph->off in kernel/disk  
+    */
     readseg(pa, ph->filesz, ph->off);
     if(ph->memsz > ph->filesz)
       stosb(pa + ph->filesz, 0, ph->memsz - ph->filesz);
@@ -43,6 +49,11 @@ bootmain(void)
 
   // Call the entry point from the ELF header.
   // Does not return!
+  /*
+    * elf->entry was set by linker using kernel.ld
+    * This is the address 0x80100000 specified in kernel.ld
+    * See kernel.asm for kernel assembly code  
+  */
   entry = (void(*)(void))(elf->entry);
   entry();
 }
@@ -76,7 +87,7 @@ readsect(void *dst, uint offset)
 // Read 'count' bytes at 'offset' from kernel into physical address 'pa'.
 // Might copy more than asked.
 void
-readseg(uchar* pa, uint count, uint offset)
+readseg(uchar* pa, uint count, uint offset)   // reads sectors of size 512 // SECTSIZE = 512, all disks are available with 512 only.
 {
   uchar* epa;
 
@@ -92,5 +103,5 @@ readseg(uchar* pa, uint count, uint offset)
   // We'd write more to memory than asked, but it doesn't matter --
   // we load in increasing order.
   for(; pa < epa; pa += SECTSIZE, offset++)
-    readsect(pa, offset);
+    readsect(pa, offset);   // Data will be read from the physical harddisk and put into memory.
 }

@@ -12,12 +12,12 @@ main(void)
 {
   int pid, wpid;
 
-  if(open("console", O_RDWR) < 0){
-    mknod("console", 1, 1);
+  if(open("console", O_RDWR) < 0){    // open the file called console   // and returns 0 fd
+    mknod("console", 1, 1);           // if it does not exist create the file
     open("console", O_RDWR);
   }
-  dup(0);  // stdout
-  dup(0);  // stderr
+  dup(0);  // stdout    // duplicating it to console  
+  dup(0);  // stderr    // duplicating it to console
 
   for(;;){
     printf(1, "init: starting sh\n");
@@ -27,11 +27,11 @@ main(void)
       exit();
     }
     if(pid == 0){
-      exec("sh", argv);
+      exec("sh", argv);   // execute the shell (the prompt which we see and executes the command)
       printf(1, "init: exec sh failed\n");
       exit();
     }
-    while((wpid=wait()) >= 0 && wpid != pid)
-      printf(1, "zombie!\n");
+    while((wpid=wait()) >= 0 && wpid != pid)    // waiting for zombie processes or cleaning up the zombie processes
+      printf(1, "zombie!\n");                   // a zommbie process is a process which is over but the parent has not called a wait on it
   }
 }
