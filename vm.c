@@ -63,8 +63,8 @@ mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)    //page directo
   char *a, *last;
   pte_t *pte;
 
-  a = (char*)PGROUNDDOWN((uint)va);
-  last = (char*)PGROUNDDOWN(((uint)va) + size - 1);
+  a = (char*)PGROUNDDOWN((uint)va);       // start address rounded down to nearest page boundary
+  last = (char*)PGROUNDDOWN(((uint)va) + size - 1);   // end address rounded down to nearest page boundary
   for(;;){
     if((pte = walkpgdir(pgdir, a, 1)) == 0)
       return -1;
@@ -108,9 +108,9 @@ static struct kmap {
   uint phys_end;
   int perm;
 } kmap[] = {
- { (void*)KERNBASE, 0,             EXTMEM,    PTE_W}, // I/O space          // starting from the virtual address KERNBASE i.e. 2048 upto EXTMEM that is the range of 1 MB will be writable.
- { (void*)KERNLINK, V2P(KERNLINK), V2P(data), 0},     // kern text+rodata   // starting from KERNLINK == 2098 upto the variable data 80108000 (from kernel.sym) is read-only.
- { (void*)data,     V2P(data),     PHYSTOP,   PTE_W}, // kern data+memory   // from that to PHYSTOP == 224 MB create entries in the page table which are marked for writing.
+ { (void*)KERNBASE, 0,             EXTMEM,    PTE_W}, // I/O space or mmap devices      // starting from the virtual address KERNBASE i.e. 2048 upto EXTMEM that is the range of 1 MB will be writable.
+ { (void*)KERNLINK, V2P(KERNLINK), V2P(data), 0},     // kern text+rodata   // starting from KERNLINK == 2049 (2gb + 1mb) upto the variable data 80108000 == 2049.3125 MB (from kernel.sym) is read-only.
+ { (void*)data,     V2P(data),     PHYSTOP,   PTE_W}, // kern data+memory   // from that to PHYSTOP(size of physical memory) == 224 MB create entries in the page table which are marked for writing.
  { (void*)DEVSPACE, DEVSPACE,      0,         PTE_W}, // more devices
 };
 
@@ -121,13 +121,13 @@ setupkvm(void)
   pde_t *pgdir;
   struct kmap *k;
 
-  if((pgdir = (pde_t*)kalloc()) == 0)
+  if((pgdir = (pde_t*)kalloc()) == 0)   // gets a page from kernel's heap
     return 0;
-  memset(pgdir, 0, PGSIZE);
+  memset(pgdir, 0, PGSIZE);   // Zeroes that page
   if (P2V(PHYSTOP) > (void*)DEVSPACE)
     panic("PHYSTOP too high");
-  for(k = kmap; k < &kmap[NELEM(kmap)]; k++)
-    if(mappages(pgdir, k->virt, k->phys_end - k->phys_start,
+  for(k = kmap; k < &kmap[NELEM(kmap)]; k++)      // looks into the kmap array and calls mappages function to create mappings for each element in that array
+    if(mappages(pgdir, k->virt, k->phys_end - k->phys_start,      //  maps physical address space to vrtual address space
                 (uint)k->phys_start, k->perm) < 0) {
       freevm(pgdir);
       return 0;
@@ -149,7 +149,7 @@ kvmalloc(void)
 void
 switchkvm(void)
 {
-  lcr3(V2P(kpgdir));   // switch to the kernel page table
+  lcr3(V2P(kpgdir));   // switch to the kernel page table   // loads cr3 with kpgdir physical address   
 }
 
 // Switch TSS and h/w page table to correspond to process p.

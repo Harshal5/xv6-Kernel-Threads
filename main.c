@@ -17,7 +17,7 @@ extern char end[]; // first address after kernel loaded from ELF file
 int
 main(void)
 {
-  kinit1(end, P2V(4*1024*1024)); // phys page allocator
+  kinit1(end, P2V(4*1024*1024)); // phys page allocator   // initialises the heap for the kernel strating fromthe end
   kvmalloc();      // kernel page table
   mpinit();        // detect other processors
   lapicinit();     // interrupt controller

@@ -33,13 +33,13 @@ kinit1(void *vstart, void *vend)
 {
   initlock(&kmem.lock, "kmem");
   kmem.use_lock = 0;
-  freerange(vstart, vend);
+  freerange(vstart, vend);      // adds all the pages in this address range (till 2gb + 4mb) into free list 
 }
 
 void
 kinit2(void *vstart, void *vend)
 {
-  freerange(vstart, vend);
+  freerange(vstart, vend);    // adds all the pages from (2gb + 4mb to PHYSTOP) into free list
   kmem.use_lock = 1;
 }
 

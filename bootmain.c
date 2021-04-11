@@ -22,7 +22,7 @@ bootmain(void)      // load the kernel from the disk into memory and jump to the
   void (*entry)(void);
   uchar* pa;
 
-  elf = (struct elfhdr*)0x10000;    // scratch space  // ELF pointing to 64KB memory address.
+  elf = (struct elfhdr*)0x10000;    // scratch space  // ELF pointing to 1MB memory address.    // kernel is loaded at 1MB address
 
   // Read 1st page off disk
   readseg((uchar*)elf, 4096, 0);    // (uchar *)elf is the target address, read from 0 to 4096 bytes (ELF header).
