@@ -613,3 +613,46 @@ clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack)
 
   return pid;
 }
+
+int
+join(void **stack)
+{
+  struct proc *p;
+  int hasThreads, pid;
+  struct proc *curproc = myproc();
+  
+  acquire(&ptable.lock);
+  for(;;){
+    // Scan through table looking for exited threads.
+    hasThreads = 0;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->parent != curproc || p->pgdir != p->parent->pgdir)    // a process for being a thread of another process; its parent must be the other process and if not they should atleast share the same address space as that of its parent 
+        continue;
+      hasThreads = 1;
+      if(p->state == ZOMBIE){
+        // Found one.
+        pid = p->pid;
+        kfree(p->kstack);
+        p->kstack = 0;
+        stack == p->threadstack;    // !! FREE THIS STACK !!
+        p->threadstack = 0;
+        p->pid = 0;
+        p->parent = 0;
+        p->name[0] = 0;
+        p->killed = 0;
+        p->state = UNUSED;
+        release(&ptable.lock);
+        return pid;
+      }
+    }
+
+    // No point waiting if we don't have any children.
+    if(!hasThreads || curproc->killed){
+      release(&ptable.lock);
+      return -1;
+    }
+
+    // Wait for children to exit.  (See wakeup1 call in proc_exit.)
+    sleep(curproc, &ptable.lock);  //DOC: wait-sleep
+  }
+}
