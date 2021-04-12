@@ -17,7 +17,7 @@ extern char end[]; // first address after kernel loaded from ELF file
 int
 main(void)
 {
-  kinit1(end, P2V(4*1024*1024)); // phys page allocator   // initialises the heap for the kernel strating fromthe end
+  kinit1(end, P2V(4*1024*1024)); // phys page allocator   // initialises the heap for the kernel strating from the end
   kvmalloc();      // kernel page table
   mpinit();        // detect other processors
   lapicinit();     // interrupt controller
@@ -32,7 +32,7 @@ main(void)
   fileinit();      // file table
   ideinit();       // disk 
   startothers();   // start other processors
-  kinit2(P2V(4*1024*1024), P2V(PHYSTOP)); // must come after startothers()
+  kinit2(P2V(4*1024*1024), P2V(PHYSTOP)); // must come after startothers()    // initialises the heap fot the kernel till PHYSTOP
   userinit();      // first user process
   mpmain();        // finish this processor's setup
 }
@@ -52,7 +52,7 @@ static void
 mpmain(void)
 {
   cprintf("cpu%d: starting %d\n", cpuid(), cpuid());
-  idtinit();       // load idt register
+  idtinit();       // load idt register   // initialises the IDTR 
   xchg(&(mycpu()->started), 1); // tell startothers() we're up
   scheduler();     // start running processes
 }

@@ -112,6 +112,31 @@ found:
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
 
+  /*  Now, the kstack looks like this:
+  * 
+    +----------------+    <-- kstack + KSTACKSIZE
+    +   user cs      +                                  ^
+    +   user eip     +                                  |   
+    +   eflags       +                                  |   trapframe
+    +   user ss      +                                  |
+    +   user esp     +                                  v
+    +----------------+    <-- p->tf  
+    +   trapret      +  
+    +----------------+
+    + eip-> forkret  +                                  ^
+    +   ebp = 0      +                                  |
+    +   ebx = 0      +                                  |   context
+    +   esi = 0      +                                  |
+    +   edi = 0      +    <-- sp                        v
+    +                + 
+    +                + 
+    +                + 
+    +                + 
+    +                + 
+    +----------------+    <-- kstack 
+  *
+  */
+
   return p;
 }
 
@@ -126,21 +151,40 @@ userinit(void)
   p = allocproc();    // allocates a struct proc
   
   initproc = p;
-  if((p->pgdir = setupkvm()) == 0)
+  if((p->pgdir = setupkvm()) == 0)    // sets up all kernal mappings (above KERNBASE) 
     panic("userinit: out of memory?");
-  inituvm(p->pgdir, _binary_initcode_start, (int)_binary_initcode_size);
+  inituvm(p->pgdir, _binary_initcode_start, (int)_binary_initcode_size);    // sets up all user mappings
   p->sz = PGSIZE;
   memset(p->tf, 0, sizeof(*p->tf));
-  p->tf->cs = (SEG_UCODE << 3) | DPL_USER;
-  p->tf->ds = (SEG_UDATA << 3) | DPL_USER;
+  p->tf->cs = (SEG_UCODE << 3) | DPL_USER;    // cs is pointed to user's code segment
+  p->tf->ds = (SEG_UDATA << 3) | DPL_USER;    // ds is pointed to user's data segment
   p->tf->es = p->tf->ds;
   p->tf->ss = p->tf->ds;
-  p->tf->eflags = FL_IF;
+  p->tf->eflags = FL_IF;    // interrupt flags are enabled
   p->tf->esp = PGSIZE;
   p->tf->eip = 0;  // beginning of initcode.S
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
+
+/*  Now, the ADDRESS SPACE OF THE FIRST PROCESS looks like this:
+  * 
+                    +----------------+    <-- 2^32-1    (4GB)
+                    +       .        +                                  
+                    +   k heap       +                                     
+                    +   k data       +                                  
+                    +   k code       +                                  
+                    +----------------+    <-- KERNBASE   (2GB) 
+                    +                + 
+                    +                + 
+    user's esp -->  +----------------+    <-- PGSIZE     (4KB)
+                    +                + 
+                    +----------------+ 
+                    +    binary      + 
+                    +    initcode    + 
+    user's eip -->  +----------------+    <-- 0
+  *
+  */
 
   // this assignment to p->state lets other cores
   // run this process. the acquire forces the above
