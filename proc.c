@@ -539,8 +539,6 @@ clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack)
   int pid;
   struct proc *newProcess;
   struct proc *currentProc = myproc();
-  void *arg1Address, *arg2Address, *returnPCAddress;
- 
   //  add size checking  
   //  also for page-alignment 
 
@@ -574,21 +572,16 @@ clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack)
   *
   */
 
-  returnPCAddress = stack + PGSIZE - (3 * sizeof(void *));
-  *(uint*) returnPCAddress = 0xffffffff;    // so that is returns to nowhere, hence i guess it becomes zombie after execution
-
-  arg1Address = stack + PGSIZE - (2 * sizeof(void *));
-  *(uint*) arg1Address = (uint) arg1;
+  int user_stack[3];
+  uint stack_pointer = (uint)stack + PGSIZE;
+  user_stack[0] = 0xffffffff;
+  user_stack[1] = (uint)arg1;
+  user_stack[2] = (uint)arg2;
+  stack_pointer -= 12;
+  if (copyout(newProcess->pgdir, stack_pointer, user_stack, 12) < 0)
+    return -1;
   
-  arg2Address = stack + PGSIZE - (sizeof(void *));
-  *(uint*) arg2Address = (uint) arg2;
-
-  cprintf("From proc.c %p\n", (char*)arg2);
-
-  // This gives the sense of calling conventions
-  // i.e. arg2 is pushed first, then arg1, and then the "fake" return PC
-
-  newProcess->tf->esp = (uint)(stack + PGSIZE - (3 * sizeof(void *)));    // esp has the address of the top of the stack   
+  newProcess->tf->esp = (uint)stack_pointer;
   newProcess->tf->ebp = newProcess->tf->esp;    // %ebp will always be where %esp was at the beginning of the function 
   newProcess->tf->eax = 0;    // So that clone returns 0 in the thread
   newProcess->tf->eip = (uint) fcn;   // execution will hence start from this function
@@ -634,7 +627,7 @@ join(void **stack)
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
-        stack == p->threadstack;    // !! FREE THIS STACK !!
+        stack = p->threadstack;    // !! FREE THIS STACK !!
         p->threadstack = 0;
         p->pid = 0;
         p->parent = 0;
