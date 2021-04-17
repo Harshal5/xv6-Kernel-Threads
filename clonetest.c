@@ -27,7 +27,6 @@ int main(int argc, char *argv[])
   // sleep while the cloned process runs
   // we do this so that we can run this test without using join()
   sleep(10);
-
   printf(1, "Parent: pid of cloned thread is %d\n", child_pid);
 
   printf(1, "END\n");
