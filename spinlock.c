@@ -22,31 +22,31 @@ initlock(struct spinlock *lk, char *name)
 // Holding a lock for a long time may cause
 // other CPUs to waste time spinning to acquire it.
 void
-acquire(struct spinlock *lk)
+acquire(struct spinlock *lk)      // Spin Lock Code
 {
-  pushcli(); // disable interrupts to avoid deadlock.
-  if(holding(lk))
+  pushcli(); // disable interrupts to avoid deadlock. // see function below
+  if(holding(lk))   // if true : panics  // see the function below
     panic("acquire");
 
   // The xchg is atomic.
-  while(xchg(&lk->locked, 1) != 0)
+  while(xchg(&lk->locked, 1) != 0)    // xchg == exchange
     ;
 
   // Tell the C compiler and the processor to not move loads or stores
   // past this point, to ensure that the critical section's memory
   // references happen after the lock is acquired.
-  __sync_synchronize();
+  __sync_synchronize();   // memory barrier instruction
 
   // Record info about lock acquisition for debugging.
   lk->cpu = mycpu();
-  getcallerpcs(&lk, lk->pcs);
+  getcallerpcs(&lk, lk->pcs);   // pcs array set which is mostly used in the panic code to print eip, flags, etc
 }
 
 // Release the lock.
 void
-release(struct spinlock *lk)
+release(struct spinlock *lk)      // Spin Unlock code
 {
-  if(!holding(lk))
+  if(!holding(lk))    // Check for : you cannot release if you aren't holding a lock
     panic("release");
 
   lk->pcs[0] = 0;
@@ -64,7 +64,7 @@ release(struct spinlock *lk)
   // not be atomic. A real OS would use C atomics here.
   asm volatile("movl $0, %0" : "+m" (lk->locked) : );
 
-  popcli();
+  popcli();   // interrupts get enabled again
 }
 
 // Record the current call stack in pcs[] by following the %ebp chain.
@@ -91,7 +91,7 @@ holding(struct spinlock *lock)
 {
   int r;
   pushcli();
-  r = lock->locked && lock->cpu == mycpu();
+  r = lock->locked && lock->cpu == mycpu();   // Checks is some other process on this very processor is holding the lock or not 
   popcli();
   return r;
 }
@@ -106,11 +106,11 @@ pushcli(void)
 {
   int eflags;
 
-  eflags = readeflags();
-  cli();
+  eflags = readeflags();    // gets the eflags    // flags are pushed on the stack
+  cli();    // disables the interrupts
   if(mycpu()->ncli == 0)
     mycpu()->intena = eflags & FL_IF;
-  mycpu()->ncli += 1;
+  mycpu()->ncli += 1;   // count of number of spinlocks set 
 }
 
 void

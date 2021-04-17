@@ -44,7 +44,7 @@ struct proc {
   struct proc *parent;         // Parent process
   struct trapframe *tf;        // Trap frame for current syscall    // pointer in the kstack pointing to trapframe
   struct context *context;     // swtch() here to run process
-  void *chan;                  // If non-zero, sleeping on chan
+  void *chan;                  // If non-zero, sleeping on chan   // whenever chan is not NULL; the state must be WAITING
   int killed;                  // If non-zero, have been killed
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
