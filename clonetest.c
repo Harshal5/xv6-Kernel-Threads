@@ -13,7 +13,7 @@ void func(void *arg1, void *arg2)
 
 int main(int argc, char *argv[])
 {
-  int parent_pid, child_pid;
+  int parent_pid, child_tid;
   void *stack_bottom = malloc(4096);
   int arg1 = 10;
   char *arg2 = "Harshal";
@@ -23,11 +23,11 @@ int main(int argc, char *argv[])
   parent_pid = getpid();
   printf(1, "Parent: pid is %d\n", parent_pid);
 
-  child_pid = clone(&func, &arg1, arg2, stack_bottom);
+  child_tid = clone(&func, &arg1, arg2, stack_bottom);
   // sleep while the cloned process runs
   // we do this so that we can run this test without using join()
   sleep(10);
-  printf(1, "Parent: pid of cloned thread is %d\n", child_pid);
+  printf(1, "Parent: tid of cloned thread is %d\n", child_tid);
 
   printf(1, "END\n");
   exit();

@@ -15,6 +15,7 @@ struct {
 static struct proc *initproc;
 
 int nextpid = 1;
+int nexttid = 1;
 extern void forkret(void);
 extern void trapret(void);
 
@@ -196,6 +197,7 @@ fork(void)
     np->state = UNUSED;
     return -1;
   }
+  np->tid = 1;
   np->sz = curproc->sz;
   np->parent = curproc;
   *np->tf = *curproc->tf;
@@ -291,6 +293,7 @@ wait(void)
         p->kstack = 0;
         freevm(p->pgdir);
         p->pid = 0;
+        p->tid = 0;
         p->parent = 0;
         p->name[0] = 0;
         p->killed = 0;
@@ -536,7 +539,7 @@ procdump(void)
 int 
 clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack)
 {
-  int pid;
+  int tid;
   struct proc *newProcess;
   struct proc *currentProc = myproc();
   //  add size checking  
@@ -547,6 +550,8 @@ clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack)
     return -1;
   }
 
+  newProcess->pid = currentProc->pid;
+  newProcess->tid = ++nexttid;
   newProcess->pgdir = currentProc->pgdir;
   newProcess->sz = currentProc->sz;
   newProcess->parent = currentProc;
@@ -596,7 +601,7 @@ clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack)
 
   safestrcpy(newProcess->name, currentProc->name, sizeof(currentProc->name));   // copying name
 
-  pid = newProcess->pid;
+  tid = newProcess->tid;
 
   acquire(&ptable.lock);
 
@@ -604,14 +609,14 @@ clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack)
 
   release(&ptable.lock);
 
-  return pid;
+  return tid;
 }
 
 int
 join(void **stack)
 {
   struct proc *p;
-  int hasThreads, pid;
+  int hasThreads, tid;
   struct proc *curproc = myproc();
   
   acquire(&ptable.lock);
@@ -624,7 +629,7 @@ join(void **stack)
       hasThreads = 1;
       if(p->state == ZOMBIE){
         // Found one.
-        pid = p->pid;
+        tid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
         stack = p->threadstack;    // !! FREE THIS STACK !!
@@ -635,7 +640,7 @@ join(void **stack)
         p->killed = 0;
         p->state = UNUSED;
         release(&ptable.lock);
-        return pid;
+        return tid;
       }
     }
 
