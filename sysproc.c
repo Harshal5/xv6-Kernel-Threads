@@ -116,3 +116,9 @@ sys_join(void)
 
   return join(stack);
 }
+
+int
+sys_gettid(void)
+{
+  return myproc()->tid;
+}
