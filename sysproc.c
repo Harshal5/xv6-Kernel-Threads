@@ -39,7 +39,7 @@ sys_kill(void)
 int
 sys_getpid(void)
 {
-  return myproc()->pid;
+  return myproc()->tgid;
 }
 
 int
@@ -120,5 +120,5 @@ sys_join(void)
 int
 sys_gettid(void)
 {
-  return myproc()->tid;
+  return myproc()->pid;
 }
