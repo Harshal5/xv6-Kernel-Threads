@@ -271,7 +271,7 @@ exit(void)
 // Wait for a child process to exit and return its pid.
 // Return -1 if this process has no children.
 int
-wait(void)
+wait(void)    // should reap only processes
 {
   struct proc *p;
   int havekids, pid;
@@ -282,7 +282,7 @@ wait(void)
     // Scan through table looking for exited children.
     havekids = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->parent != curproc)
+      if(p->parent != curproc || p->threadstack )   // so that is does not select an thread
         continue;
       havekids = 1;
       if(p->state == ZOMBIE){
@@ -611,7 +611,7 @@ clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack)
 }
 
 int
-join(void **stack)
+join(void **stack)    // should reap only threads
 {
   struct proc *p;
   int hasThreads, pid;
@@ -622,7 +622,7 @@ join(void **stack)
     // Scan through table looking for exited threads.
     hasThreads = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->parent != curproc || p->pgdir != p->parent->pgdir)    // a process for being a thread of another process; its parent must be the other process and if not they should atleast share the same address space as that of its parent 
+      if(p->parent != curproc || p->pgdir != curproc->pgdir)    // a process for being a thread of another process; its parent must be the other process and if not they should atleast share the same address space as that of its parent 
         continue;
       hasThreads = 1;
       if(p->state == ZOMBIE){
