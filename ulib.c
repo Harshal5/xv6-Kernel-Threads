@@ -4,6 +4,8 @@
 #include "user.h"
 #include "x86.h"
 
+#define PGSIZE    4096
+
 char*
 strcpy(char *s, const char *t)
 {
@@ -103,4 +105,23 @@ memmove(void *vdst, const void *vsrc, int n)
   while(n-- > 0)
     *dst++ = *src++;
   return vdst;
+}
+
+int thread_create(void(*start_routine)(void*, void*), void* arg1, void* arg2){
+  void * stack;
+  stack = malloc(PGSIZE);
+  if((uint)stack % PGSIZE != 0){
+    free(stack);
+    stack = malloc(2 * PGSIZE);
+    stack = stack + (PGSIZE - ((uint)stack % PGSIZE));
+  }
+  return clone(start_routine, arg1, arg2, stack);
+
+}
+
+int thread_join(){
+  void * stack_ptr;
+  int pid = join(&stack_ptr);
+  free(stack_ptr);
+  return pid;
 }
