@@ -630,7 +630,7 @@ join(void **stack)    // should reap only threads
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
-        stack = p->threadstack;    // !! FREE THIS STACK !!
+        *stack = p->threadstack;    // !! FREE THIS STACK !!
         p->threadstack = 0;
         p->pid = 0;
         p->tgid = 0;
