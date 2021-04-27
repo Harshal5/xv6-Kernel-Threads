@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
   for(int i = 0; i < n ; i++){
     stack_bottom = malloc(4096);
     char *arg2 = "IN i = ";
-    clone(&func, &arg1, arg2, stack_bottom);
+    clone(&func, &arg1, arg2, stack_bottom, CLONE_THREAD);
   }
   for(int i = 0; i < n; i++)
     join(stack_bottom);

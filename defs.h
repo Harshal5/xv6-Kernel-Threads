@@ -120,8 +120,14 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
-int             clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack);
+int             clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack, int flags);
 int             join(void **stack);
+
+
+#define CLONE_FS	    0x00000001	/* set if fs info shared between processes */
+#define CLONE_FILES	    0x00000010	/* set if open files shared between processes */
+#define CLONE_THREAD	0x00000100	/* Same thread group */
+#define CLONE_PARENT	0x00001000	/* set if we want to have the same parent as the cloner */
 
 // swtch.S
 void            swtch(struct context**, struct context*);

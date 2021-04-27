@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
   void *stack_bottom = malloc(4096);
   int arg1 = 0;
   char *arg2 = "Hello";
-  clone(&func, &arg1, arg2, stack_bottom);
+  clone(&func, &arg1, arg2, stack_bottom, CLONE_THREAD);
   join(stack_bottom);
   printf(1, "Parent pid = %d\n", getpid());
   printf(1, "Parent tid = %d\n", gettid());

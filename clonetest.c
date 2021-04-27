@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
   parent_pid = getpid();
   printf(1, "Parent: pid is %d\n", parent_pid);
 
-  child_tid = clone(&func, &arg1, arg2, stack_bottom);
+  child_tid = clone(&func, &arg1, arg2, stack_bottom, CLONE_THREAD);
   // sleep while the cloned process runs
   // we do this so that we can run this test without using join()
   sleep(10);

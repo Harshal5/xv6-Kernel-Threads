@@ -94,7 +94,7 @@ int
 sys_clone(void)
 {
   void(*fcn)(void*, void *);
-  int arg1, arg2, stack;
+  int arg1, arg2, stack, flags;
 
   if(argptr(0, (void*) &fcn, sizeof(void*)) < 0)
     return -1;
@@ -102,7 +102,10 @@ sys_clone(void)
   if((argptr(1, (void*) &arg1, sizeof(void*)) < 0) || (argptr(2, (void*) &arg2, sizeof(void*)) < 0) || (argptr(3, (void*) &stack, sizeof(void*)) < 0))
     return -1;
 
-  return clone((void*) fcn, (void*) arg1, (void*) arg2, (void*) stack);
+  if(argint(4, &flags) < 0)
+    return -1;
+
+  return clone((void*) fcn, (void*) arg1, (void*) arg2, (void*) stack, flags);
 }
 
 int

@@ -536,23 +536,51 @@ procdump(void)
 }
 
 int 
-clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack)
+clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack, int flags)
 {
   int pid;
   struct proc *newProcess;
   struct proc *currentProc = myproc();
   //  add size checking  
   //  also for page-alignment 
+  cprintf("flags : = %d\n", flags);
 
   newProcess = allocproc();
   if (newProcess == 0){
     return -1;
   }
 
-  newProcess->tgid = currentProc->tgid;
+  if(flags & CLONE_FILES){
+    for(int i = 0; i < NOFILE; i++)   // sharing the same file descriptor table
+      if(currentProc->ofile[i])
+        newProcess->ofile[i] = currentProc->ofile[i];
+  } else{
+    for(int i = 0; i < NOFILE; i++)   // duplicating all the file table values from the parent process.
+    if(currentProc->ofile[i])
+      newProcess->ofile[i] = filedup(currentProc->ofile[i]);
+  }
+  
+  if(flags & CLONE_FS){
+    newProcess->cwd = currentProc->cwd;   // sharing the same filesystem
+  } else{
+    newProcess->cwd = idup(currentProc->cwd);   // duplicate the current working directory inode
+  }
+
+  if((flags & CLONE_PARENT) || (flags & CLONE_THREAD)){
+    newProcess->parent = currentProc->parent;   // Parent of the new child will be the same as that of calling process
+  } else{
+    newProcess->parent = currentProc;   // Child's parent is the calling process
+  }
+
+  if(flags & CLONE_THREAD){
+    newProcess->tgid = currentProc->tgid;   // the thread is placed in the same thread group as the calling process
+
+  } else{
+    newProcess->tgid = currentProc->pid;    //  the thread is placed in a new thread group
+  }
+
   newProcess->pgdir = currentProc->pgdir;
   newProcess->sz = currentProc->sz;
-  newProcess->parent = currentProc;
   *newProcess->tf = *currentProc->tf;
 
   /*  Now, we want the Stack to look like:
@@ -591,12 +619,6 @@ clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack)
 
   newProcess->threadstack = stack;    // saving the address of the stack
   
-  for(int i = 0; i < NOFILE; i++)   // duplicating all the file table values from the parent process.
-    if(currentProc->ofile[i])
-      newProcess->ofile[i] = filedup(currentProc->ofile[i]);
-  
-  newProcess->cwd = idup(currentProc->cwd);   // duplicate the current working directory inode
-
   safestrcpy(newProcess->name, currentProc->name, sizeof(currentProc->name));   // copying name
 
   pid = newProcess->pid;

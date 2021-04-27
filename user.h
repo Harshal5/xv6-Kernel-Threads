@@ -23,7 +23,7 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
-int clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack);
+int clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack, int flags);
 int join(void **stack);
 int gettid(void);
 
@@ -42,3 +42,9 @@ void free(void*);
 int atoi(const char*);
 int thread_create(void(*start_routine)(void *, void *), void *arg1, void *arg2);
 int thread_join();
+
+
+#define CLONE_FS	    0x00000001
+#define CLONE_FILES	    0x00000010
+#define CLONE_THREAD	0x00000100
+#define CLONE_PARENT	0x00001000
