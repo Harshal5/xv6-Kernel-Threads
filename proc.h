@@ -51,6 +51,7 @@ struct proc {
   char name[16];               // Process name (debugging)
   int tgid;                    // Thread Group ID
   void *threadstack;           // User stack for the thread
+  struct proc *generator;      // Process/Thread which called clone 
 };
 
 // Process memory is laid out contiguously, low addresses first:
