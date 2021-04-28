@@ -2,10 +2,20 @@
 #include "stat.h"
 #include "user.h"
 
+void func1(void *arg1, void *arg2)
+{
+  printf(1, "Child2 pid = %d\n", getpid());
+  printf(1, "Child2 tid = %d\n", gettid());
+  exit();
+}
+
 void func(void *arg1, void *arg2)
 {
-  printf(1, "Child pid = %d\n", getpid());
-  printf(1, "Child tid = %d\n", gettid());
+  printf(1, "Child1 pid = %d\n", getpid());
+  printf(1, "Child1 tid = %d\n", gettid());
+  void *stack = malloc(4096);
+  clone(&func1, &arg1, arg2, stack, CLONE_THREAD);
+  join(stack);
   exit();
 }
 

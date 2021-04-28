@@ -183,8 +183,8 @@ UPROGS=\
 	_zombie\
 	_clonetest\
 	_jointest\
-	_test\
-	# _gettidtest\
+	_gettidtest\
+	# _test\
 	# _matmul\
 
 fs.img: mkfs README $(UPROGS)
