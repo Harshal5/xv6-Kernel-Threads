@@ -122,6 +122,7 @@ void            wakeup(void*);
 void            yield(void);
 int             clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack, int flags);
 int             join(void **stack);
+int             tgkill(int tgid, int tid);
 
 
 #define CLONE_FS	    0x00000001	/* set if fs info shared between processes */

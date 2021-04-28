@@ -6,6 +6,7 @@
         "x86.h": "c",
         "mmu.h": "c",
         "memlayout.h": "c",
-        "types.h": "c"
+        "types.h": "c",
+        "spinlock.h": "c"
     }
 }

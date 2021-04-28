@@ -3,6 +3,7 @@
 #include "param.h"
 #include "memlayout.h"
 #include "mmu.h"
+#include "spinlock.h"
 #include "proc.h"
 #include "x86.h"
 #include "syscall.h"
@@ -106,6 +107,7 @@ extern int sys_uptime(void);
 extern int sys_clone(void);
 extern int sys_join(void);
 extern int sys_gettid(void);
+extern int sys_tgkill(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -132,6 +134,7 @@ static int (*syscalls[])(void) = {
 [SYS_clone]   sys_clone,
 [SYS_join]    sys_join,
 [SYS_gettid]  sys_gettid,
+[SYS_tgkill]  sys_tgkill,
 };
 
 void

@@ -4,13 +4,10 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "x86.h"
-#include "proc.h"
 #include "spinlock.h"
+#include "proc.h"
 
-struct {
-  struct spinlock lock;
-  struct proc proc[NPROC];
-} ptable;
+struct proc_table ptable;
 
 static struct proc *initproc;
 
@@ -200,7 +197,7 @@ fork(void)
   np->sz = curproc->sz;
   np->parent = curproc;
   *np->tf = *curproc->tf;
-  np->generator = curproc;
+  np->tgleader = np;
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
 
@@ -251,7 +248,9 @@ exit(void)
   acquire(&ptable.lock);
 
   // Parent might be sleeping in wait().
-  wakeup1(curproc->generator);
+  wakeup1(curproc->parent);
+  // Group Leader Thread might be sleeping.
+  wakeup1(curproc->tgleader);
 
   // Pass abandoned children to init.
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
@@ -294,7 +293,7 @@ wait(void)    // should reap only processes
         p->pid = 0;
         p->tgid = 0;
         p->parent = 0;
-        p->generator = 0;
+        p->tgleader = 0;
         p->name[0] = 0;
         p->killed = 0;
         p->state = UNUSED;
@@ -488,6 +487,7 @@ kill(int pid)
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->pid == pid){
       p->killed = 1;
+      // cprintf("p->state = %d\n", p->state);
       // Wake process from sleep if necessary.
       if(p->state == SLEEPING)
         p->state = RUNNABLE;
@@ -580,7 +580,7 @@ clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack, int flags
     newProcess->tgid = newProcess->pid;    //  the thread is placed in a new thread group
   }
 
-  newProcess->generator = currentProc;
+  newProcess->tgleader = currentProc->tgleader;
   newProcess->pgdir = currentProc->pgdir;
   newProcess->sz = currentProc->sz;
   *newProcess->tf = *currentProc->tf;
@@ -646,12 +646,13 @@ join(void **stack)    // should reap only threads
     // Scan through table looking for exited threads.
     hasThreads = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->generator != curproc){
+      if((p->tgleader != curproc->tgleader)){
           continue;
       }
       hasThreads = 1;
       if(p->state == ZOMBIE){
         // Found one.
+        // cprintf("IN pid = %d\n", p->pid);
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
@@ -660,7 +661,7 @@ join(void **stack)    // should reap only threads
         p->pid = 0;
         p->tgid = 0;
         p->parent = 0;
-        p->generator = 0;
+        p->tgleader = 0;
         p->name[0] = 0;
         p->killed = 0;
         p->state = UNUSED;

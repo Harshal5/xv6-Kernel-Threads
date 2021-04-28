@@ -5,6 +5,7 @@
 #include "param.h"
 #include "memlayout.h"
 #include "mmu.h"
+#include "spinlock.h"
 #include "proc.h"
 
 int
@@ -123,4 +124,15 @@ int
 sys_gettid(void)
 {
   return myproc()->pid;
+}
+
+int
+sys_tgkill(void)
+{
+  int tgid, tid;
+
+  if((argint(0, &tgid) < 0) || (argint(1, &tid) < 0))
+    return -1;
+
+  return kill(tid);
 }

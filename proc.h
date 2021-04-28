@@ -51,7 +51,7 @@ struct proc {
   char name[16];               // Process name (debugging)
   int tgid;                    // Thread Group ID
   void *threadstack;           // User stack for the thread
-  struct proc *generator;      // Process/Thread which called clone 
+  struct proc *tgleader;       // Group Leader of a thread group
 };
 
 // Process memory is laid out contiguously, low addresses first:
@@ -59,3 +59,10 @@ struct proc {
 //   original data and bss
 //   fixed-size stack
 //   expandable heap
+
+struct proc_table {
+  struct spinlock lock;
+  struct proc proc[NPROC];
+};
+
+extern struct proc_table ptable;
