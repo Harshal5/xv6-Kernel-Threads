@@ -115,7 +115,7 @@ int thread_create(void(*start_routine)(void*, void*), void* arg1, void* arg2){
     stack = malloc(2 * PGSIZE);
     stack = stack + (PGSIZE - ((uint)stack % PGSIZE));
   }
-  int flags = CLONE_FILES | CLONE_FS;
+  int flags = CLONE_THREAD;
   // printf(1, "flags : = %d\n", flags);
   return clone(start_routine, arg1, arg2, stack, flags);
 

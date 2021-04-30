@@ -20,6 +20,30 @@ exec(char *path, char **argv)
   pde_t *pgdir, *oldpgdir;
   struct proc *curproc = myproc();
 
+  struct proc *p;
+  
+  acquire(&ptable.lock);
+
+  if(curproc->killed){
+    release(&ptable.lock);
+    return -1;
+  }
+  
+  for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+    if (p->tgid == curproc->tgid && p->pid != curproc->pid) {
+      // cprintf("my parent = %d\n", p->parent->pid);
+      // cprintf("in killing = %d\n", p->pid);
+      p->killed = 1;
+      p->tgleader = curproc;
+      // cprintf("state = %d\n", p->state);
+      if (p->state == SLEEPING) 
+        p->state = RUNNABLE;
+    }
+  }
+  release(&ptable.lock);
+  
+  curproc->tgleader = curproc;
+  
   begin_op();
 
   if((ip = namei(path)) == 0){

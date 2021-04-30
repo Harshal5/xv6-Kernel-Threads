@@ -121,6 +121,7 @@ userinit(void)
   extern char _binary_initcode_start[], _binary_initcode_size[];
 
   p = allocproc();
+  p->tgid = p->pid;
   
   initproc = p;
   if((p->pgdir = setupkvm()) == 0)
@@ -248,10 +249,16 @@ exit(void)
   acquire(&ptable.lock);
 
   // Parent might be sleeping in wait().
-  wakeup1(curproc->parent);
+  // wakeup1(curproc->parent);
   // Group Leader Thread might be sleeping.
-  wakeup1(curproc->tgleader);
-
+  // wakeup1(curproc->tgleader);
+  // cprintf("in exit : %d\n", curproc->pid);
+  if(curproc->tgleader == curproc){
+    wakeup1(curproc->parent);
+  }
+  else{
+    wakeup1(curproc->tgleader);
+  }
   // Pass abandoned children to init.
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->parent == curproc){
@@ -263,6 +270,9 @@ exit(void)
 
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
+  // if(curproc->pid == 4){
+  //   cprintf("in exit wakeup parent : %d, parent = %d\n", curproc->pid, curproc->parent->pid);
+  // }
   sched();
   panic("zombie exit");
 }
@@ -275,21 +285,23 @@ wait(void)    // should reap only processes
   struct proc *p;
   int havekids, pid;
   struct proc *curproc = myproc();
-  
+  // cprintf("in Outer Wait : %d\n", curproc->pid);
   acquire(&ptable.lock);
   for(;;){
     // Scan through table looking for exited children.
     havekids = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->parent != curproc || p->threadstack )   // so that is does not select an thread
+      if((p->parent != curproc->tgleader) || p->threadstack)   // so that is does not select an thread
         continue;
       havekids = 1;
       if(p->state == ZOMBIE){
         // Found one.
+        // cprintf("In wait pid = %d\n", p->pid);
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
-        freevm(p->pgdir);
+        if(p->tgleader == p)
+          freevm(p->pgdir);
         p->pid = 0;
         p->tgid = 0;
         p->parent = 0;
@@ -297,6 +309,8 @@ wait(void)    // should reap only processes
         p->name[0] = 0;
         p->killed = 0;
         p->state = UNUSED;
+        // procdump();
+        // cprintf("in wait : %d\n", pid);
         release(&ptable.lock);
         return pid;
       }
@@ -646,13 +660,13 @@ join(void **stack)    // should reap only threads
     // Scan through table looking for exited threads.
     hasThreads = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if((p->tgleader != curproc->tgleader)){
+      if(p->tgleader != curproc->tgleader){
           continue;
       }
       hasThreads = 1;
       if(p->state == ZOMBIE){
         // Found one.
-        // cprintf("IN pid = %d\n", p->pid);
+        cprintf("IN pid = %d\n", p->pid);
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;

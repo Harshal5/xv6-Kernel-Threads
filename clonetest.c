@@ -26,7 +26,8 @@ int main(int argc, char *argv[])
   child_tid = clone(&func, &arg1, arg2, stack_bottom, CLONE_THREAD);
   // sleep while the cloned process runs
   // we do this so that we can run this test without using join()
-  sleep(10);
+  // sleep(10);
+  // join(stack_bottom);
   printf(1, "Parent: tid of cloned thread is %d\n", child_tid);
 
   printf(1, "END\n");
