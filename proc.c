@@ -6,9 +6,6 @@
 #include "x86.h"
 #include "spinlock.h"
 #include "proc.h"
-#include "fs.h"
-#include "sleeplock.h"
-#include "file.h"
 
 struct proc_table ptable;
 
@@ -239,13 +236,13 @@ exit(void)
   // cprintf("haha");
 
   // Close all open files.
-  for(fd = 0; fd < NOFILE; fd++){ 
-    // cprintf("curproc->ofile[fd] %d\n", curproc->ofile[fd]->ref);
-    if(curproc->ofile[fd] && curproc->ofile[fd]->ref){
-      fileclose(curproc->ofile[fd]);
-      curproc->ofile[fd] = 0;
+  if( curproc == curproc->tgleader)
+    for(fd = 0; fd < NOFILE; fd++){ 
+      if(curproc->ofile[fd]){
+        fileclose(curproc->ofile[fd]);
+        curproc->ofile[fd] = 0;
+      }
     }
-  }
 
   begin_op();
   iput(curproc->cwd);
@@ -601,9 +598,9 @@ clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack, int flags
   }
 
   if(flags & CLONE_VM){
-    newProcess->pgdir = currentProc->pgdir;
+    newProcess->pgdir = currentProc->pgdir;   // memory space sharing
   } else{
-    if((newProcess->pgdir = copyuvm(currentProc->pgdir, currentProc->sz)) == 0){
+    if((newProcess->pgdir = copyuvm(currentProc->pgdir, currentProc->sz)) == 0){    // equivalent to fork
       kfree(newProcess->kstack);
       newProcess->kstack = 0;
       newProcess->state = UNUSED;

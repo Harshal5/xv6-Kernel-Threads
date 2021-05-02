@@ -14,14 +14,12 @@ int main(int argc, char *argv[])
   char *arg2 = "Hello";
   int fd = open("flags.txt", O_RDONLY|O_WRONLY|O_CREATE);
   thread_create(threadfunc, &fd, arg2);
-  // sleep(100);
-  // write(fd, "in MAIN\n", strlen("in MAIN\n"));
   thread_join();
+  write(fd, "in MAIN\n", strlen("in MAIN\n"));
   printf(1, "read in main %s\n", s);
-  // close(fd);
-  // fd = open("flags.txt", O_RDONLY|O_WRONLY|O_CREATE);
-  // read(fd, s, sizeof(s));
-  // close(fd);
+  fd = open("flags.txt", O_RDONLY|O_WRONLY|O_CREATE);
+  read(fd, s, sizeof(s));
+  close(fd);
   printf(1, "END\n");
   exit();
 }
