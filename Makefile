@@ -184,6 +184,8 @@ UPROGS=\
 	_clonetest\
 	_gettidtest\
 	_test\
+	# _test_flags\
+	# _locktest\
 	# _jointest\
 	# _tgkill\
 	# _matmul\

@@ -6,6 +6,9 @@
 #include "x86.h"
 #include "spinlock.h"
 #include "proc.h"
+#include "fs.h"
+#include "sleeplock.h"
+#include "file.h"
 
 struct proc_table ptable;
 
@@ -233,9 +236,12 @@ exit(void)
   if(curproc == initproc)
     panic("init exiting");
 
+  // cprintf("haha");
+
   // Close all open files.
-  for(fd = 0; fd < NOFILE; fd++){
-    if(curproc->ofile[fd]){
+  for(fd = 0; fd < NOFILE; fd++){ 
+    // cprintf("curproc->ofile[fd] %d\n", curproc->ofile[fd]->ref);
+    if(curproc->ofile[fd] && curproc->ofile[fd]->ref){
       fileclose(curproc->ofile[fd]);
       curproc->ofile[fd] = 0;
     }

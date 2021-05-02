@@ -115,7 +115,7 @@ int thread_create(void(*start_routine)(void*, void*), void* arg1, void* arg2){
     stack = malloc(2 * PGSIZE);
     stack = stack + (PGSIZE - ((uint)stack % PGSIZE));
   }
-  int flags = CLONE_THREAD;
+  int flags = CLONE_VM |CLONE_FILES| CLONE_PARENT | CLONE_FS | CLONE_THREAD;
   // printf(1, "flags : = %d\n", flags);
   return clone(start_routine, arg1, arg2, stack, flags);
 
@@ -126,4 +126,17 @@ int thread_join(){
   int pid = join(&stack_ptr);
   free(stack_ptr);
   return pid;
+}
+
+int lock_init(tlock *lk){
+  lk->locked = 0;
+  return 0;
+}
+
+void lock_acquire(tlock *lk){
+  while(xchg(&lk->locked, 1) != 0);
+}
+
+void lock_release(tlock *lk){
+  lk->locked = 0;
 }

@@ -57,7 +57,7 @@ void
 fileclose(struct file *f)
 {
   struct file ff;
-
+  // cprintf("f->ref = %d\n", f->ref);
   acquire(&ftable.lock);
   if(f->ref < 1)
     panic("fileclose");

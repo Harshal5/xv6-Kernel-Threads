@@ -1,6 +1,10 @@
 struct stat;
 struct rtcdate;
 
+typedef struct lock{
+    uint locked;    // locked or not?
+}tlock;
+
 // system calls
 int fork(void);
 int exit(void) __attribute__((noreturn));
@@ -43,6 +47,9 @@ void free(void*);
 int atoi(const char*);
 int thread_create(void(*start_routine)(void *, void *), void *arg1, void *arg2);
 int thread_join();
+int lock_init(tlock *lk);
+void lock_acquire(tlock *lk);
+void lock_release(tlock *lk);
 
 
 #define CLONE_FS	    0x00000001
