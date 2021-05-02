@@ -294,7 +294,7 @@ wait(void)    // should reap only processes
     // Scan through table looking for exited children.
     havekids = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->parent != curproc->tgleader && p->threadstack)   // so that is does not select an thread
+      if(p->parent != curproc->tgleader || p->threadstack)   // so that is does not select an thread
         continue;
       havekids = 1;
       if(p->state == ZOMBIE){

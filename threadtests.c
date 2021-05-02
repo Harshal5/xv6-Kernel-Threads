@@ -226,7 +226,7 @@ void func(void *arg1, void *arg2)
     } else{
         printf(1, "getTidTest failed\n\n");
     }
-  exit();
+    exit();
 }
 
 int getTidTest(void){
@@ -343,9 +343,56 @@ int limitedThreadsTest(void){
     return 0;
 }
 
+void fstestfunc(void *a, void *b){
+    mkdir("test");
+    chdir("test");
+    exit();
+}
+
+int cloneFSTest(void)
+{
+    printf(1, "clone fs starting\n");
+    void *stack = malloc(4096);
+    int arg1 = 0; 
+    clone(fstestfunc, &arg1, &arg1, stack, CLONE_THREAD | CLONE_FS);
+    join(stack);
+    
+    if (chdir("../") < 0){
+        printf(1, "clone fs test FAILED\n");
+        return 0;
+    }
+    if (unlink("test") < 0){
+        printf(1, "unlink failed\n");
+        return 0;
+    }
+    free(stack);
+    printf(1, "CloneFsTest passed\n");
+    return 0;
+}
+
+void filesfunc(void *arg1, void *arg2) {
+    write(*(int*)arg1, "Hello\n", strlen("Hello\n"));
+    exit();
+}
+
+int cloneFilesTest(void){
+    printf(1, "CloneFilesTest started\n");   
+    void *stack = malloc(4096);
+    int fd = open("flags.txt", O_RDONLY|O_WRONLY|O_CREATE);
+    clone(filesfunc, &fd, &fd, stack, CLONE_THREAD | CLONE_FILES);
+    join(stack);
+    write(fd, "in  MAIN\n", strlen("in MAIN\n"));
+    free(stack);
+    printf(1, "CloneFilesTest Passed\n\n");   
+    return 0;
+}   
+    
 int main(int argc, char *argv[]){
     cloneTest();
     cloneInForkTest();
+    cloneFSTest();
+    cloneFilesTest();
+    execInCloneTest();
     mutlipleCloneTest();
     forkInCloneTest();
     userlandFuncTest();
@@ -355,6 +402,5 @@ int main(int argc, char *argv[]){
     maxThreadsTest();
     limitedThreadsTest();
     matmulTest();
-    // execInCloneTest();
     exit();
 }

@@ -181,16 +181,9 @@ UPROGS=\
 	_usertests\
 	_wc\
 	_zombie\
-	_gettidtest\
-	_test_flags_files\
 	_threadtests\
-	_clork\
-	_test\
-	# _matmul\
-	# _locktest\
-	# _jointest\
-	# _tgkill\
-
+	# _test_flags_files\
+	
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
 
@@ -262,9 +255,8 @@ EXTRA=\
 	printf.c umalloc.c\
 	README dot-bochsrc *.pl toc.* runoff runoff1 runoff.list\
 	.gdbinit.tmpl gdbutil\
-	clork.c jointest.c gettidtest.c\
 	threadtests.c\
-	# test.c matmul.c\
+	# test_flags_files.c\
 
 dist:
 	rm -rf dist
