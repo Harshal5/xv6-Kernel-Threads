@@ -182,7 +182,6 @@ UPROGS=\
 	_wc\
 	_zombie\
 	_threadtests\
-	# _test_flags_files\
 	
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
@@ -256,7 +255,6 @@ EXTRA=\
 	README dot-bochsrc *.pl toc.* runoff runoff1 runoff.list\
 	.gdbinit.tmpl gdbutil\
 	threadtests.c\
-	# test_flags_files.c\
 
 dist:
 	rm -rf dist
@@ -291,3 +289,4 @@ tar:
 
 run:
 	make && echo "./threadtests" | make qemu
+	make clean

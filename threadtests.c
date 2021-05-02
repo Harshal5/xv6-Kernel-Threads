@@ -392,7 +392,6 @@ int main(int argc, char *argv[]){
     cloneInForkTest();
     cloneFSTest();
     cloneFilesTest();
-    execInCloneTest();
     mutlipleCloneTest();
     forkInCloneTest();
     userlandFuncTest();
@@ -402,5 +401,6 @@ int main(int argc, char *argv[]){
     maxThreadsTest();
     limitedThreadsTest();
     matmulTest();
+    printf(1, "All THREADTESTS COMPLETED\n");
     exit();
 }

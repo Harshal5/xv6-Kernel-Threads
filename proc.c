@@ -273,9 +273,6 @@ exit(void)
 
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
-  // if(curproc->pid == 4){
-  //   cprintf("in exit wakeup parent : %d, parent = %d\n", curproc->pid, curproc->parent->pid);
-  // }
   sched();
   panic("zombie exit");
 }
@@ -559,9 +556,6 @@ clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack, int flags
   int pid;
   struct proc *newProcess;
   struct proc *currentProc = myproc();
-  //  add size checking  
-  //  also for page-alignment 
-  // cprintf("flags : = %d\n", flags);
 
   newProcess = allocproc();
   if (newProcess == 0){
@@ -703,7 +697,6 @@ join(void **stack)    // should reap only threads
       return -1;
     }
 
-    // Wait for children to exit.  (See wakeup1 call in proc_exit.)
-    sleep(curproc, &ptable.lock);  //DOC: wait-sleep
+    sleep(curproc, &ptable.lock);  
   }
 }
