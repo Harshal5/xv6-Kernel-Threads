@@ -98,6 +98,7 @@ int forkInCloneTest(){
     return 0;
 } 
 
+// test for userland thread library
 int userlandFuncTest(void){
     printf(1, "UserlandFuncTest starting\n");
     int i = 0;
@@ -112,7 +113,7 @@ int userlandFuncTest(void){
     return 0;
 }
 
-
+// Matrix multiplication code
 #define MAX_SIZE 100000
 
 int count = 0, i, j, k;
@@ -276,7 +277,6 @@ int locksTest(void){
     }
     return 0;
 }
-
 
 
 int tgkillTest(void){
