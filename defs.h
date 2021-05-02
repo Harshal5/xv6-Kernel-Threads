@@ -129,7 +129,7 @@ int             tgkill(int tgid, int tid);
 #define CLONE_FILES	    0x00000010	/* set if open files shared between processes */
 #define CLONE_THREAD	0x00000100	/* Same thread group */
 #define CLONE_PARENT	0x00001000	/* set if we want to have the same parent as the cloner */
-
+#define CLONE_VM        0x00010000  /* set if we want to share the memory descriptor / page tables */
 // swtch.S
 void            swtch(struct context**, struct context*);
 

@@ -49,3 +49,4 @@ int thread_join();
 #define CLONE_FILES	    0x00000010
 #define CLONE_THREAD	0x00000100
 #define CLONE_PARENT	0x00001000
+#define CLONE_VM        0x00010000

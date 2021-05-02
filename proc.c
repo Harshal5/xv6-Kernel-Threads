@@ -594,8 +594,17 @@ clone(void(*fcn)(void *, void *), void *arg1, void *arg2, void *stack, int flags
     newProcess->tgid = newProcess->pid;    //  the thread is placed in a new thread group
   }
 
+  if(flags & CLONE_VM){
+    newProcess->pgdir = currentProc->pgdir;
+  } else{
+    if((newProcess->pgdir = copyuvm(currentProc->pgdir, currentProc->sz)) == 0){
+      kfree(newProcess->kstack);
+      newProcess->kstack = 0;
+      newProcess->state = UNUSED;
+      return -1;
+  }
+  }
   newProcess->tgleader = currentProc->tgleader;
-  newProcess->pgdir = currentProc->pgdir;
   newProcess->sz = currentProc->sz;
   *newProcess->tf = *currentProc->tf;
 
@@ -660,7 +669,7 @@ join(void **stack)    // should reap only threads
     // Scan through table looking for exited threads.
     hasThreads = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->tgleader != curproc->tgleader){
+      if(p->tgleader != curproc->tgleader && !p->threadstack){
           continue;
       }
       hasThreads = 1;
