@@ -183,7 +183,7 @@ UPROGS=\
 	_zombie\
 	_clonetest\
 	_gettidtest\
-	_test_flags\
+	_test_flags_files\
 	# _test\
 	# _locktest\
 	# _jointest\

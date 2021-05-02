@@ -233,7 +233,7 @@ exit(void)
   if(curproc == initproc)
     panic("init exiting");
 
-  // cprintf("haha");
+  cprintf("In exit : %d\n", curproc->pid);
 
   // Close all open files.
   if( curproc == curproc->tgleader)
@@ -294,7 +294,7 @@ wait(void)    // should reap only processes
     // Scan through table looking for exited children.
     havekids = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if((p->parent != curproc->tgleader) || p->threadstack)   // so that is does not select an thread
+      if(p->parent != curproc->tgleader)   // so that is does not select an thread
         continue;
       havekids = 1;
       if(p->state == ZOMBIE){
@@ -666,19 +666,20 @@ join(void **stack)    // should reap only threads
   struct proc *p;
   int hasThreads, pid;
   struct proc *curproc = myproc();
+  cprintf("IN join outer = %d\n", curproc->pid);
 
   acquire(&ptable.lock);
   for(;;){
     // Scan through table looking for exited threads.
     hasThreads = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->tgleader != curproc->tgleader && !p->threadstack){
+      if(p->tgleader != curproc->tgleader && p == curproc){
           continue;
       }
       hasThreads = 1;
       if(p->state == ZOMBIE){
         // Found one.
-        cprintf("IN pid = %d\n", p->pid);
+        cprintf("IN join found = %d\n", p->pid);
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
