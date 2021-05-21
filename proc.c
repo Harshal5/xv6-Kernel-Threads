@@ -296,7 +296,7 @@ exit(void)
   // Parent might be sleeping in wait().
   wakeup1(curproc->parent);
 
-  // Pass abandoned children to init.
+  // Pass abandoned children to init.   // Attaching orphans to initproc
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->parent == curproc){
       p->parent = initproc;
@@ -479,7 +479,7 @@ sleep(void *chan, struct spinlock *lk)
   // (wakeup runs with ptable.lock locked),
   // so it's okay to release lk.
   if(lk != &ptable.lock){  //DOC: sleeplock0
-    acquire(&ptable.lock);  //DOC: sleeplock1
+    acquire(&ptable.lock);  //DOC: sleeplock1     // ptable lock must be the last lock acquired 
     release(lk);
   }
   // Go to sleep.
@@ -494,7 +494,7 @@ sleep(void *chan, struct spinlock *lk)
   // Reacquire original lock.
   if(lk != &ptable.lock){  //DOC: sleeplock2
     release(&ptable.lock);
-    acquire(lk);
+    acquire(lk);                      // as ptable lock must be the last lock acquired we cannot acquire lk before releasing the ptable lock.
   }
 }
 

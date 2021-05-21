@@ -24,8 +24,8 @@ initlock(struct spinlock *lk, char *name)
 void
 acquire(struct spinlock *lk)      // Spin Lock Code
 {
-  pushcli(); // disable interrupts to avoid deadlock. // see function below
-  if(holding(lk))   // if true : panics  // see the function below
+  pushcli(); // disable interrupts to avoid deadlock. // see function below  // cli is not used as it does not handle nested calls to acquire 
+  if(holding(lk))   // if true : panics  // see the function below // checks if same cpu tries to acquire one more lock
     panic("acquire");
 
   // The xchg is atomic.
@@ -39,7 +39,7 @@ acquire(struct spinlock *lk)      // Spin Lock Code
 
   // Record info about lock acquisition for debugging.
   lk->cpu = mycpu();
-  getcallerpcs(&lk, lk->pcs);   // pcs array set which is mostly used in the panic code to print eip, flags, etc
+  getcallerpcs(&lk, lk->pcs);   // pcs array set which is mostly used in the panic code to print eip, flags, etc   // for debugging purposes
 }
 
 // Release the lock.

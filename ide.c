@@ -29,9 +29,9 @@
 // You must hold idelock while manipulating queue.
 
 static struct spinlock idelock;
-static struct buf *idequeue;
+static struct buf *idequeue;    // queue of buffers which are to be written or read from the harddisk
 
-static int havedisk1;
+static int havedisk1;   // set to 1 when you have fs.img
 static void idestart(struct buf*);
 
 // Wait for IDE disk to become ready.
@@ -135,7 +135,7 @@ ideintr(void)
 // If B_DIRTY is set, write buf to disk, clear B_DIRTY, set B_VALID.
 // Else if B_VALID is not set, read buf from disk, set B_VALID.
 void
-iderw(struct buf *b)
+iderw(struct buf *b)      // called from bread and bwrite
 {
   struct buf **pp;
 
@@ -150,17 +150,17 @@ iderw(struct buf *b)
 
   // Append b to idequeue.
   b->qnext = 0;
-  for(pp=&idequeue; *pp; pp=&(*pp)->qnext)  //DOC:insert-queue
+  for(pp=&idequeue; *pp; pp=&(*pp)->qnext)  //DOC:insert-queue      // move to the last node
     ;
-  *pp = b;
+  *pp = b;                                                          // and attach 
 
   // Start disk if necessary.
-  if(idequeue == b)
+  if(idequeue == b)   // if b is the first buffer in the list 
     idestart(b);
 
   // Wait for request to finish.
   while((b->flags & (B_VALID|B_DIRTY)) != B_VALID){
-    sleep(b, &idelock);
+    sleep(b, &idelock);   // sleep unitl the read or write gets completed
   }
 
 

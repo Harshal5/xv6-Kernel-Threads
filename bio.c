@@ -36,7 +36,7 @@ struct {
 } bcache;
 
 void
-binit(void)
+binit(void)   // linking all the strcutures in a DLL
 {
   struct buf *b;
 
